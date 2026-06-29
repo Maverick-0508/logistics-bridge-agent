@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Logistics Bridge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col items-center justify-center p-6">
+
+    <div class="max-w-4xl w-full bg-gray-800 rounded-xl shadow-2xl p-8 border border-gray-700">
+        <h1 class="text-3xl font-bold text-emerald-400 mb-2">🌐 AI Communication Bridge</h1>
+        <p class="text-gray-400 mb-8">Simulate incoming driver status updates and bridge them live to the client voice agent.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-gray-850 p-6 rounded-lg border border-gray-700 space-y-4">
+                <h2 class="text-xl font-semibold text-white">📥 Driver SMS Input</h2>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Driver Phone Number</label>
+                    <input type="text" id="phoneNumber" value="+254 712 345678" class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white focus:outline-none focus:border-emerald-400">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Message Body</label>
+                    <textarea id="smsBody" rows="4" placeholder="e.g., Stuck in traffic on Waiyaki Way, delaying delivery by 20 minutes." class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white focus:outline-none focus:border-emerald-400"></textarea>
+                </div>
+            </div>
+
+            <div class="bg-gray-850 p-6 rounded-lg border border-gray-700 flex flex-col justify-between items-center text-center">
+                <h2 class="text-xl font-semibold text-white mb-4">📡 Live Voice Connection</h2>
+                
+                <div class="my-6">
+                    <span id="statusIndicator" class="px-4 py-2 rounded-full bg-gray-700 text-gray-400 text-sm font-medium tracking-wide animate-pulse">
+                        🔴 OFFLINE
+                    </span>
+                </div>
+
+                <div class="space-y-4 w-full">
+                    <button id="startCallBtn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-gray-900 font-bold py-3 px-6 rounded transition duration-200 shadow-lg">
+                        📞 Initiate Voice Call Bridge
+                    </button>
+                    <button id="stopCallBtn" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 px-6 rounded transition duration-200 hidden shadow-lg">
+                        🛑 Terminate Bridge Connection
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./script.js"></script>
+</body>
+</html>
