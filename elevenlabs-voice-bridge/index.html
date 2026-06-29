@@ -3,48 +3,342 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Logistics Bridge — real-time driver SMS to voice agent communication hub.">
     <title>AI Logistics Bridge</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        surface: '#0f1117',
+                        panel:   '#161b27',
+                        card:    '#1c2333',
+                        border:  '#2a3347',
+                    },
+                    animation: {
+                        'ping-slow':    'ping 2s cubic-bezier(0,0,0.2,1) infinite',
+                        'spin-slow':    'spin 8s linear infinite',
+                        'spin-reverse': 'spin-reverse 5s linear infinite',
+                        'wave':         'wave 1.4s ease-in-out infinite',
+                        'scan':         'scan 3s linear infinite',
+                    },
+                    keyframes: {
+                        'spin-reverse': { to: { transform: 'rotate(-360deg)' } },
+                        'wave':  { '0%,100%': { transform: 'scaleY(0.35)', opacity: '0.5' }, '50%': { transform: 'scaleY(1)', opacity: '1' } },
+                        'scan':  { '0%': { transform: 'translateY(-100%)' }, '100%': { transform: 'translateY(400%)' } },
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+
+        /* Mesh background */
+        .mesh-bg {
+            background-color: #0f1117;
+            background-image:
+                linear-gradient(rgba(16,185,129,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(16,185,129,0.03) 1px, transparent 1px);
+            background-size: 44px 44px;
+        }
+
+        /* Radial glow */
+        .glow-emerald { box-shadow: 0 0 30px rgba(16,185,129,0.25), 0 0 60px rgba(16,185,129,0.1); }
+        .glow-rose    { box-shadow: 0 0 30px rgba(244,63,94,0.25),  0 0 60px rgba(244,63,94,0.1); }
+        .glow-text    { text-shadow: 0 0 20px rgba(16,185,129,0.5); }
+
+        /* Glass card */
+        .glass {
+            background: rgba(28, 35, 51, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(42, 51, 71, 0.8);
+        }
+
+        /* Input glow on focus */
+        .input-field {
+            background: rgba(15,17,23,0.8);
+            border: 1px solid #2a3347;
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            width: 100%;
+            padding: 10px 14px;
+            outline: none;
+            font-size: 14px;
+        }
+        .input-field::placeholder { color: #4b5563; }
+        .input-field:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+        }
+
+        /* Wave bars */
+        .wave-bar { animation: wave 1.4s ease-in-out infinite; }
+        .wave-bar:nth-child(1) { animation-delay: 0.0s; height: 8px;  }
+        .wave-bar:nth-child(2) { animation-delay: 0.15s; height: 14px; }
+        .wave-bar:nth-child(3) { animation-delay: 0.30s; height: 20px; }
+        .wave-bar:nth-child(4) { animation-delay: 0.45s; height: 14px; }
+        .wave-bar:nth-child(5) { animation-delay: 0.60s; height: 8px;  }
+        @keyframes wave { 0%,100%{transform:scaleY(0.35);opacity:0.45} 50%{transform:scaleY(1);opacity:1} }
+
+        /* Orb rings */
+        .ring-outer { animation: spin 8s linear infinite; }
+        .ring-inner { animation: spin-reverse 5s linear infinite; }
+        @keyframes spin-reverse { to { transform: rotate(-360deg); } }
+
+        /* Scrollbar for log */
+        .log-scroll::-webkit-scrollbar { width: 4px; }
+        .log-scroll::-webkit-scrollbar-track { background: transparent; }
+        .log-scroll::-webkit-scrollbar-thumb { background: #2a3347; border-radius: 9px; }
+
+        /* Log entry fade-in */
+        .log-entry { animation: fadeSlide 0.3s ease-out; }
+        @keyframes fadeSlide { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+        /* Scan line on orb */
+        @keyframes scan { 0%{top:-20%} 100%{top:120%} }
+        .scan-line { animation: scan 3s linear infinite; }
+    </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col items-center justify-center p-6">
 
-    <div class="max-w-4xl w-full bg-gray-800 rounded-xl shadow-2xl p-8 border border-gray-700">
-        <h1 class="text-3xl font-bold text-emerald-400 mb-2">🌐 AI Communication Bridge</h1>
-        <p class="text-gray-400 mb-8">Simulate incoming driver status updates and bridge them live to the client voice agent.</p>
+<body class="mesh-bg text-gray-100 min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="bg-gray-850 p-6 rounded-lg border border-gray-700 space-y-4">
-                <h2 class="text-xl font-semibold text-white">📥 Driver SMS Input</h2>
+    <!-- Radial ambient glow -->
+    <div class="fixed inset-0 pointer-events-none" style="background:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(16,185,129,0.08) 0%, transparent 70%);"></div>
+
+    <div class="relative z-10 w-full max-w-5xl flex flex-col gap-6">
+
+        <!-- ── Header ── -->
+        <header class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-lg">🌐</div>
                 <div>
-                    <label class="block text-sm text-gray-400 mb-1">Driver Phone Number</label>
-                    <input type="text" id="phoneNumber" value="+254 712 345678" class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white focus:outline-none focus:border-emerald-400">
+                    <h1 class="text-lg font-bold text-white tracking-tight leading-none">AI Logistics Bridge</h1>
+                    <p class="text-xs text-gray-500 mt-0.5">ElevenLabs Voice Agent · Control Panel</p>
                 </div>
-                <div>
-                    <label class="block text-sm text-gray-400 mb-1">Message Body</label>
-                    <textarea id="smsBody" rows="4" placeholder="e.g., Stuck in traffic on Waiyaki Way, delaying delivery by 20 minutes." class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white focus:outline-none focus:border-emerald-400"></textarea>
+            </div>
+            <div class="flex items-center gap-2 text-xs font-mono text-gray-500">
+                <span id="clock" class="tabular-nums"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            </div>
+        </header>
+
+        <!-- ── Main grid ── -->
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+            <!-- ── Left: SMS Input (3 cols) ── -->
+            <div class="lg:col-span-3 glass rounded-2xl p-6 flex flex-col gap-5">
+
+                <div class="flex items-center gap-2 border-b border-gray-700/50 pb-4">
+                    <span class="text-emerald-400 text-base">📥</span>
+                    <h2 class="font-semibold text-white text-sm tracking-wide uppercase">Driver SMS Input</h2>
+                    <span class="ml-auto text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full">SIMULATE</span>
+                </div>
+
+                <!-- Phone -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-medium text-gray-400 tracking-wide uppercase">Driver Phone Number</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">📱</span>
+                        <input type="text" id="phoneNumber" value="+254 712 345678"
+                            class="input-field pl-9">
+                    </div>
+                </div>
+
+                <!-- Message -->
+                <div class="space-y-1.5 flex-1">
+                    <label class="text-xs font-medium text-gray-400 tracking-wide uppercase">Message Body</label>
+                    <textarea id="smsBody" rows="5"
+                        placeholder="e.g., Stuck in traffic on Waiyaki Way, delaying delivery by 20 minutes."
+                        class="input-field resize-none"></textarea>
+                </div>
+
+                <!-- Quick-fill chips -->
+                <div class="space-y-1.5">
+                    <p class="text-xs text-gray-500">Quick templates</p>
+                    <div class="flex flex-wrap gap-2" id="quickChips">
+                        <button class="chip text-xs px-3 py-1.5 rounded-full border border-gray-700 text-gray-400 hover:border-emerald-500/50 hover:text-emerald-400 transition-all duration-150 cursor-pointer">🚦 Traffic delay</button>
+                        <button class="chip text-xs px-3 py-1.5 rounded-full border border-gray-700 text-gray-400 hover:border-emerald-500/50 hover:text-emerald-400 transition-all duration-150 cursor-pointer">🔧 Vehicle breakdown</button>
+                        <button class="chip text-xs px-3 py-1.5 rounded-full border border-gray-700 text-gray-400 hover:border-emerald-500/50 hover:text-emerald-400 transition-all duration-150 cursor-pointer">📦 Delivered</button>
+                        <button class="chip text-xs px-3 py-1.5 rounded-full border border-gray-700 text-gray-400 hover:border-emerald-500/50 hover:text-emerald-400 transition-all duration-150 cursor-pointer">❓ Address unclear</button>
+                    </div>
                 </div>
             </div>
 
-            <div class="bg-gray-850 p-6 rounded-lg border border-gray-700 flex flex-col justify-between items-center text-center">
-                <h2 class="text-xl font-semibold text-white mb-4">📡 Live Voice Connection</h2>
-                
-                <div class="my-6">
-                    <span id="statusIndicator" class="px-4 py-2 rounded-full bg-gray-700 text-gray-400 text-sm font-medium tracking-wide animate-pulse">
-                        🔴 OFFLINE
-                    </span>
+            <!-- ── Right: Voice Panel (2 cols) ── -->
+            <div class="lg:col-span-2 flex flex-col gap-6">
+
+                <!-- Connection card -->
+                <div class="glass rounded-2xl p-6 flex flex-col items-center gap-5">
+                    <div class="flex items-center gap-2 w-full border-b border-gray-700/50 pb-4">
+                        <span class="text-emerald-400 text-base">📡</span>
+                        <h2 class="font-semibold text-white text-sm tracking-wide uppercase">Live Voice Bridge</h2>
+                    </div>
+
+                    <!-- Orb -->
+                    <div class="relative w-28 h-28 flex items-center justify-center my-2">
+                        <!-- Outer ring -->
+                        <div class="ring-outer absolute inset-0 rounded-full border border-emerald-500/20" style="border-style:dashed;"></div>
+                        <!-- Inner ring -->
+                        <div class="ring-inner absolute inset-3 rounded-full border border-emerald-400/15"></div>
+                        <!-- Orb core -->
+                        <button id="startCallBtn"
+                            class="orb-btn relative w-20 h-20 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 overflow-hidden"
+                            style="background:linear-gradient(135deg,#059669,#065f46); box-shadow:0 0 28px rgba(16,185,129,0.3), 0 0 56px rgba(16,185,129,0.1), inset 0 1px 0 rgba(255,255,255,0.12);"
+                            aria-label="Start voice bridge">
+                            <!-- Scan line effect -->
+                            <div class="scan-line absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-300/40 to-transparent" style="position:absolute;"></div>
+                            <svg class="w-8 h-8 text-white/90 relative z-10" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 1a4 4 0 014 4v6a4 4 0 01-8 0V5a4 4 0 014-4zm6 10a6 6 0 01-12 0H4a8 8 0 007 7.938V21H9v2h6v-2h-2v-2.062A8 8 0 0020 11h-2z"/>
+                            </svg>
+                        </button>
+                        <!-- Stop btn (hidden by default, overlays orb) -->
+                        <button id="stopCallBtn"
+                            class="absolute w-20 h-20 rounded-full items-center justify-center cursor-pointer transition-all duration-300 hidden"
+                            style="background:linear-gradient(135deg,#be123c,#881337); box-shadow:0 0 28px rgba(244,63,94,0.35), 0 0 56px rgba(244,63,94,0.12), inset 0 1px 0 rgba(255,255,255,0.12);"
+                            aria-label="Stop voice bridge">
+                            <svg class="w-7 h-7 text-white/90" fill="currentColor" viewBox="0 0 24 24">
+                                <rect x="6" y="6" width="12" height="12" rx="2"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Wave visualizer -->
+                    <div id="waveViz" class="flex items-end gap-1 h-6 opacity-30 transition-opacity duration-500">
+                        <div class="wave-bar w-1.5 rounded-full bg-emerald-400"></div>
+                        <div class="wave-bar w-1.5 rounded-full bg-emerald-400"></div>
+                        <div class="wave-bar w-1.5 rounded-full bg-emerald-400"></div>
+                        <div class="wave-bar w-1.5 rounded-full bg-emerald-400"></div>
+                        <div class="wave-bar w-1.5 rounded-full bg-emerald-400"></div>
+                    </div>
+
+                    <!-- Status pill -->
+                    <div id="statusIndicator"
+                        class="px-4 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-gray-400 text-xs font-mono tracking-widest uppercase">
+                        ● OFFLINE
+                    </div>
                 </div>
 
-                <div class="space-y-4 w-full">
-                    <button id="startCallBtn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-gray-900 font-bold py-3 px-6 rounded transition duration-200 shadow-lg">
-                        📞 Initiate Voice Call Bridge
-                    </button>
-                    <button id="stopCallBtn" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 px-6 rounded transition duration-200 hidden shadow-lg">
-                        🛑 Terminate Bridge Connection
-                    </button>
+                <!-- Stats row -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="glass rounded-xl p-4 flex flex-col gap-1">
+                        <p class="text-[10px] text-gray-500 uppercase tracking-widest">Session</p>
+                        <p id="sessionTimer" class="text-lg font-mono font-semibold text-white tabular-nums">00:00</p>
+                    </div>
+                    <div class="glass rounded-xl p-4 flex flex-col gap-1">
+                        <p class="text-[10px] text-gray-500 uppercase tracking-widest">Messages</p>
+                        <p id="messageCount" class="text-lg font-mono font-semibold text-white tabular-nums">0</p>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <!-- ── Activity Log ── -->
+        <div class="glass rounded-2xl p-5 flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-emerald-400">🗂</span>
+                    <h2 class="font-semibold text-white text-sm tracking-wide uppercase">Activity Log</h2>
+                </div>
+                <button id="clearLogBtn" class="text-[11px] text-gray-500 hover:text-gray-300 transition-colors px-2 py-1 rounded border border-gray-700 hover:border-gray-500">Clear</button>
+            </div>
+            <div id="activityLog" class="log-scroll font-mono text-xs text-gray-500 space-y-1 max-h-32 overflow-y-auto pr-1">
+                <div class="log-entry flex gap-2 items-start">
+                    <span class="text-gray-600 shrink-0" id="initTime"></span>
+                    <span class="text-gray-500">System initialised. Awaiting connection.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="flex items-center justify-between text-[11px] text-gray-600 px-1">
+            <span>Powered by <span class="text-emerald-500/70">ElevenLabs</span> Conversational AI</span>
+            <span class="font-mono">v1.0.0</span>
+        </footer>
     </div>
+
+    <script>
+        // ── Clock ──
+        const clockEl = document.getElementById('clock');
+        const initTimeEl = document.getElementById('initTime');
+        function fmtTime(d) {
+            return d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+        }
+        initTimeEl.textContent = fmtTime(new Date());
+        setInterval(() => clockEl.textContent = fmtTime(new Date()), 1000);
+
+        // ── Quick chips ──
+        const chips = {
+            '🚦 Traffic delay':    'Stuck in traffic on Waiyaki Way, ETA delayed by 20 minutes.',
+            '🔧 Vehicle breakdown':'Vehicle has broken down at the junction. Requesting assistance.',
+            '📦 Delivered':        'Package successfully delivered and signed for by the client.',
+            '❓ Address unclear':  'Unable to locate the delivery address. Please clarify the directions.',
+        };
+        document.getElementById('quickChips').addEventListener('click', e => {
+            const btn = e.target.closest('.chip');
+            if (!btn) return;
+            document.getElementById('smsBody').value = chips[btn.textContent.trim()] ?? '';
+        });
+
+        // ── Activity log helper (called from script.js via window) ──
+        window.logActivity = function(text, type = 'info') {
+            const log   = document.getElementById('activityLog');
+            const entry = document.createElement('div');
+            const colors = { info:'text-gray-400', success:'text-emerald-400', error:'text-rose-400', warn:'text-yellow-400' };
+            entry.className = `log-entry flex gap-2 items-start ${colors[type] ?? colors.info}`;
+            entry.innerHTML = `<span class="text-gray-600 shrink-0 text-gray-500">${fmtTime(new Date())}</span><span>${text}</span>`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+            // bump message count on agent/user messages
+            if (type === 'info' && text.startsWith('💬')) {
+                const el = document.getElementById('messageCount');
+                el.textContent = parseInt(el.textContent || '0') + 1;
+            }
+        };
+
+        // ── Wave visualizer active state ──
+        window.setWaveActive = function(active) {
+            document.getElementById('waveViz').style.opacity = active ? '1' : '0.25';
+        };
+
+        // ── Session timer ──
+        let timerInterval = null;
+        let timerStart = null;
+        window.startTimer = function() {
+            timerStart = Date.now();
+            document.getElementById('messageCount').textContent = '0';
+            timerInterval = setInterval(() => {
+                const s = Math.floor((Date.now() - timerStart) / 1000);
+                const m = Math.floor(s / 60).toString().padStart(2,'0');
+                const sec = (s % 60).toString().padStart(2,'0');
+                document.getElementById('sessionTimer').textContent = `${m}:${sec}`;
+            }, 1000);
+        };
+        window.stopTimer = function() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            document.getElementById('sessionTimer').textContent = '00:00';
+        };
+
+        // ── Clear log ──
+        document.getElementById('clearLogBtn').addEventListener('click', () => {
+            document.getElementById('activityLog').innerHTML = '';
+        });
+    </script>
 
     <script type="module" src="./script.js"></script>
 </body>
