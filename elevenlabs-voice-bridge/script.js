@@ -29,7 +29,14 @@ function setStatus(text, state = 'offline') {
 
 function setConnectedUI(isConnected) {
   startCallBtn.classList.toggle('hidden', isConnected);
-  stopCallBtn.classList.toggle('hidden', !isConnected);
+  if (isConnected) {
+    stopCallBtn.classList.remove('hidden');
+    stopCallBtn.style.display = 'flex';
+  } else {
+    stopCallBtn.classList.add('hidden');
+    stopCallBtn.style.display = 'none';
+  }
+  window.setWaveActive?.(isConnected);
 }
 
 function resetUI() {
@@ -71,8 +78,10 @@ async function startVoiceBridge() {
   }
 
   // 2. Start ElevenLabs session
-  setStatus('⚡ CONNECTING TO BRIDGE…', 'connecting');
+  setStatus('● CONNECTING…', 'connecting');
+  window.logActivity?.('⚡ Initiating bridge connection…', 'warn');
   const promptOverride = buildPromptOverride();
+  if (promptOverride) window.logActivity?.('📋 SMS context injected into agent prompt.', 'info');
 
   try {
     conversationSession = await Conversation.startSession({
@@ -88,19 +97,26 @@ async function startVoiceBridge() {
 
       onConnect: ({ conversationId }) => {
         console.log('✅ Connected — Session ID:', conversationId);
-        setStatus('🟢 BRIDGE LIVE — SPEAK NOW', 'connected');
+        setStatus('● LIVE', 'connected');
         setConnectedUI(true);
         startCallBtn.disabled = false;
+        window.logActivity?.(`✅ Bridge connected — session <span class="text-emerald-300">${conversationId.slice(0,12)}…</span>`, 'success');
+        window.startTimer?.();
       },
 
       onDisconnect: () => {
         console.log('🔌 Session disconnected.');
+        window.logActivity?.('🔌 Bridge disconnected.', 'warn');
+        window.stopTimer?.();
         conversationSession = null;
         resetUI();
       },
 
       onMessage: (message) => {
         console.log('💬 Message received:', message);
+        const role = message?.source === 'user' ? '🧑 User' : '🤖 Agent';
+        const text = message?.message ?? JSON.stringify(message);
+        window.logActivity?.(`💬 ${role}: ${text.slice(0, 80)}${text.length > 80 ? '…' : ''}`, 'info');
       },
 
       onAgentResponseCorrection: ({ original_agent_response, corrected_agent_response }) => {
@@ -109,7 +125,9 @@ async function startVoiceBridge() {
 
       onError: (error) => {
         console.error('❌ ElevenLabs error:', error);
-        setStatus('❌ Connection Error', 'error');
+        setStatus('● ERROR', 'error');
+        window.logActivity?.(`❌ Error: ${error?.message ?? error}`, 'error');
+        window.stopTimer?.();
         conversationSession = null;
         resetUI();
       },
