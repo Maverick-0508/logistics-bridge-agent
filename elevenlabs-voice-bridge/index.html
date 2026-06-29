@@ -45,7 +45,7 @@
     <style>
         *, *::before, *::after { box-sizing: border-box; }
         html { scroll-behavior: smooth; }
-        body { font-family: 'Inter', sans-serif; background: #0c0e14; color: #e2e8f0; }
+        body { font-family: 'Inter', sans-serif; background: #0c0e14; color: #e2e8f0; transition: background-color 0.3s, color 0.3s; }
 
         /* ── Mesh grid background ── */
         .mesh-bg {
@@ -62,6 +62,7 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(40,50,70,.9);
+            transition: background 0.3s, border-color 0.3s;
         }
 
         /* ── Inputs ── */
@@ -75,7 +76,7 @@
             width: 100%;
             padding: 9px 13px;
             outline: none;
-            transition: border-color .2s, box-shadow .2s;
+            transition: border-color .2s, box-shadow .2s, background-color 0.3s, color 0.3s;
         }
         .input-field::placeholder { color: #374151; }
         .input-field:focus { border-color: rgba(16,185,129,.55); box-shadow: 0 0 0 3px rgba(16,185,129,.09); }
@@ -129,6 +130,84 @@
 
         /* ── Section header divider ── */
         .section-header { border-bottom: 1px solid rgba(40,50,70,.8); padding-bottom: 10px; margin-bottom: 2px; }
+
+        /* ── Light Mode Override System ── */
+        body.light-mode {
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+        body.light-mode .mesh-bg {
+            background-color: #f3f4f6;
+            background-image:
+                linear-gradient(rgba(16,185,129,.035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(16,185,129,.035) 1px, transparent 1px);
+        }
+        body.light-mode .glass {
+            background: rgba(255, 255, 255, 0.85);
+            border-color: rgba(209, 213, 219, 0.8);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+        }
+        body.light-mode .input-field {
+            background: #ffffff;
+            border-color: #d1d5db;
+            color: #1f2937;
+        }
+        body.light-mode .input-field::placeholder {
+            color: #9ca3af;
+        }
+        body.light-mode .input-field:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16,185,129,.15);
+        }
+        body.light-mode h1,
+        body.light-mode h2,
+        body.light-mode .stat-card p:nth-child(2) {
+            color: #111827 !important;
+        }
+        body.light-mode .text-gray-400,
+        body.light-mode .text-gray-500,
+        body.light-mode .text-gray-600 {
+            color: #4b5563 !important;
+        }
+        body.light-mode .text-gray-700 {
+            color: #374151 !important;
+        }
+        body.light-mode .chip {
+            border-color: #d1d5db;
+            color: #4b5563;
+        }
+        body.light-mode .chip:hover {
+            border-color: #10b981;
+            color: #047857;
+            background: rgba(16,185,129,0.08);
+        }
+        body.light-mode .scroll-thin::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+        }
+        body.light-mode #sessionTimer,
+        body.light-mode #messageCount {
+            color: #111827;
+        }
+        body.light-mode #statusIndicator {
+            background: rgba(243, 244, 246, 0.8) !important;
+            border-color: #d1d5db !important;
+            color: #6b7280 !important;
+        }
+        body.light-mode #muteBtn {
+            border-color: #d1d5db;
+            color: #4b5563;
+        }
+        body.light-mode #muteBtn:hover {
+            background: rgba(0,0,0,0.02);
+        }
+        body.light-mode #muteBtn.mute-on {
+            background: rgba(239, 68, 68, 0.1) !important;
+            border-color: rgba(239, 68, 68, 0.3) !important;
+            color: #dc2626 !important;
+        }
+        body.light-mode .section-header {
+            border-color: rgba(229, 231, 235, 0.8);
+        }
     </style>
 </head>
 
@@ -146,12 +225,17 @@
                 <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm"
                      style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.22);">🌐</div>
                 <div>
-                    <h1 class="text-sm font-bold text-white tracking-tight leading-none">AI Logistics Bridge</h1>
-                    <p class="text-[11px] text-gray-600 mt-0.5">ElevenLabs Voice Agent · Dispatch Control</p>
+                    <h1 class="text-sm font-bold text-white tracking-tight leading-none transition-colors">AI Logistics Bridge</h1>
+                    <p class="text-[11px] text-gray-600 mt-0.5 transition-colors">ElevenLabs Voice Agent · Dispatch Control</p>
                 </div>
             </div>
 
             <div class="flex items-center gap-4 text-[11px] font-mono text-gray-600">
+                <!-- Theme Toggle Button -->
+                <button id="themeToggleBtn" class="flex items-center justify-center w-7 h-7 rounded-lg border border-gray-700/60 text-gray-500 hover:text-emerald-400 hover:border-emerald-500/40 transition-all cursor-pointer" title="Toggle Light/Dark Theme">
+                    <span id="themeToggleIcon">☀️</span>
+                </button>
+
                 <!-- Signal strength indicator -->
                 <div class="flex items-end gap-0.5 h-3.5" title="Signal strength" aria-label="Signal strength: Good">
                     <div class="w-1 rounded-sm bg-emerald-500" style="height:30%"></div>
@@ -663,6 +747,27 @@
         document.getElementById('clearHistoryBtn').addEventListener('click', () => {
             localStorage.removeItem('bridge_sessions');
             renderSessionHistory();
+        });
+
+        // ── Theme Toggle ──────────────────────────────────────────────────────
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeToggleIcon = document.getElementById('themeToggleIcon');
+
+        // Apply saved theme on boot
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-mode');
+            themeToggleIcon.textContent = '🌙';
+        } else {
+            themeToggleIcon.textContent = '☀️';
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            const isLight = document.body.classList.contains('light-mode');
+            themeToggleIcon.textContent = isLight ? '🌙' : '☀️';
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            window.logActivity?.(`🎨 Theme set to ${isLight ? 'Daytime Ops' : 'Night Ops'}.`, 'info');
         });
 
         // ── Boot ──────────────────────────────────────────────────────────────
